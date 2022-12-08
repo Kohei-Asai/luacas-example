@@ -1,0 +1,180 @@
+\documentclass{jlreq}
+
+\usepackage{amsmath,amssymb}
+\usepackage{physics}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{luacas}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\usepackage[no-math]{luatexja-fontspec}
+\setmainfont[Ligatures=TeX]{TeXGyreTermes}
+\setsansfont[Ligatures=TeX]{TeXGyreHeros}
+\setmainjfont[BoldFont=HiraMinProN-W6]{HiraMinProN-W3}
+\setsansjfont[BoldFont=HiraKakuProN-W6]{HiraKakuProN-W3}
+
+
+\begin{document}
+
+\title{\texttt{luacas}パッケージ使用例}
+\author{淺井(\texttt{@acai\_berry0805})}
+\date{\today}
+\maketitle
+
+
+\section{基本の関数}
+
+
+\subsection{
+	計算結果を簡単にする
+	\quad\texttt{f:autosimplify(), \textbackslash print*\{f\}, f:simplify()}
+}
+\begin{CAS}
+	vars('x') % 多分グローバルに定義される
+	f = (1 - x + 0*x)*(1 + 1*x)
+\end{CAS}
+\[\print{f}=\print{f:autosimplify()} = \print{f:simplify()}\]
+% :autosimplify()と\print*{f}は同じ結果
+% :simplify()は出てくる項の数を極力少なくしようとするらしいので多分こっちの方が強い
+% 降べきの順になってほしいけどやり方わからん
+
+
+\subsection{展開する\quad\texttt{f:expand()}}
+\begin{CAS}
+	f = (x + 1)^2*(x - 3) + (2*x^3 + 5*x + 1)
+\end{CAS}
+\[\print{f}=\print{f:expand()}\]
+
+
+\subsection{因数分解(or素因数分解)する\quad\texttt{factor(f)}}
+\begin{CAS}
+	f = (x^2 + 5*x + 26)*(x^2 + 5*x + 24) + 1
+	a = 12512
+\end{CAS}
+\begin{align*}
+	\print{f} & =\print{factor(f:expand())} \\
+	\print{a} & =\print{factor(a)}
+\end{align*}
+% f = Poly({8,24,32,24,10,2})のように多項式で定義すればf:factor()でもいけるっぽい
+
+
+\subsection{代入する\quad\texttt{substitute(\{[x]=a\}, f)}}
+\begin{CAS}
+	f = x^4 + sqrt(2)*x^2 + 3*x + 5
+	subs = {[x]=1+sqrt(3)}
+	g = x^2 + x + 1
+\end{CAS}
+\begin{align*}
+	f(x)          & =\print{f}                               \\
+	f(1+\sqrt{3}) & =\print*{substitute(subs,f):simplify()}  \\
+	g(x)          & =\print{g}                               \\
+	g(f(x))       & =\print{substitute({[x]=f},g)}           \\
+	              & =\print*{substitute({[x]=f},g):expand()}
+\end{align*}
+
+\newpage
+
+\section{さまざまな演算}
+
+
+\subsection{微分する\quad\texttt{diff(f,x)}}
+\begin{CAS}
+	vars('x','y')
+	f = sin(x^2+x-1)
+	fx = diff(f, x)
+	g = 3*x*y - x^2*y
+	gxy = diff(g, x, y)
+	h = arctan(y/x)
+\end{CAS}
+\begin{align*}
+	\print{fx}                              & =\print*{fx}        \\
+	\print{gxy}                             & =\print*{gxy}       \\
+	\pdv{}{x}\qty(\arctan\qty(\frac{y}{x})) & =\print*{diff(h,x)}
+\end{align*}
+% \print{diff(h,x)}では偏微分記号を出力してくれなかった
+
+
+\subsection{積分する\quad\texttt{int(f,x,a,b)}}
+\begin{CAS}
+	f = cos(x)/(sin(x)*(sin(x)+1))
+	intf = int(f, x)
+	g = sin(x)*cos(x)/(1+sin(x))
+	intg = int(g, x, 0, pi/2)
+\end{CAS}
+\begin{align*}
+	\print{intf} & =\print*{intf}+C \\
+	\print{intg} & =\print*{intg}
+\end{align*}
+
+
+\subsection{部分分数展開する\quad\texttt{parfrac(num,den)}}
+\begin{CAS}
+	num = 3*x^2 - 9*x + 7
+	den = x^4 - 7*x^3 + 18*x^2 - 20*x + 8
+	p = parfrac(num, den)
+\end{CAS}
+\[\print{num/den}=\print*{p}\]
+
+
+\subsection{方程式の根を求める\quad\texttt{roots(f)}}
+\begin{CAS}
+	f = x^6 + 3*x^5 + 6*x^4 + 7*x^3 + 6*x^2 +3*x + 2
+	r = roots(f)
+\end{CAS}
+$\print{f}=0$の解は
+\[\lprint{r}\]
+% r[1]とかすれば各要素にアクセスできる（indexは1スタート）
+
+
+\subsection{$x$について解く\quad\texttt{eq:solvefor(x)}}
+\begin{CAS}
+	vars('x','y','z')
+	lhs = e^(x^2*y)
+	rhs = z + 1
+	eq = Equation(lhs, rhs)
+	eqx = eq:solvefor(x)
+\end{CAS}
+\[\print{eq}\iff\print{eqx}\]
+
+\newpage
+
+\section{使用例: 関数の増減を調べる}
+
+ {\bfseries\gtfamily keywords: 関数定義・微分・根の計算・代入・グラフ描画}
+
+\begin{CAS}
+	vars('x')
+	f = x^3-5*x^2+2*x+1
+	df = diff(f,x)
+	r = roots(df)
+\end{CAS}
+
+$f(x)=\print{f}$とする．$x$で微分すると
+\[f'(x)=\print*{df}\]
+ここで，$f'(x)=0$の解は$\displaystyle x=\print*{r[1]},\,\print*{r[2]}$である．
+よって極大値と極小値はそれぞれ
+\begin{align*}
+	f\qty(\print*{r[1]}) & =\print{substitute({[x]=r[1]},f)}            \\
+	                     & =\print{substitute({[x]=r[1]},f):simplify()} \\
+	f\qty(\print*{r[1]}) & =\print{substitute({[x]=r[2]},f)}            \\
+	                     & =\print{substitute({[x]=r[2]},f):simplify()}
+\end{align*}
+となる．よってグラフは次のとおり．
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}[scale=0.9]
+		\begin{axis}[legend pos = north west, xlabel=$x$, ylabel=$y$]
+			\addplot[domain=-4:7,samples=100]{\fetch{f}};
+			\addlegendentry{$f(x)$};
+		\end{axis}
+	\end{tikzpicture}
+\end{figure}
+
+
+使用例の一部は公式ドキュメントより抜粋しています．
+
+luacas - A computer algebra system for users of LuaLaTeX\quad
+\url{https://www.ctan.org/pkg/luacas}
+
+\end{document}
