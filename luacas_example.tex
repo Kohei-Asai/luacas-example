@@ -6,7 +6,6 @@
 \usepackage{hyperref}
 \usepackage{luacas}
 \usepackage{pgfplots}
-\pgfplotsset{compat=1.18}
 
 \usepackage[no-math]{luatexja-fontspec}
 \setmainfont[Ligatures=TeX]{TeXGyreTermes}
@@ -139,6 +138,23 @@ $\print{f}=0$の解は
 
 \newpage
 
+\subsection{グラフをプロットする\quad\texttt{\textbackslash fetch\{f\} + package pgfplots}}
+\begin{CAS}
+	f = e^x
+\end{CAS}
+\[f(x)=\print{f}\]
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}
+		\begin{axis}[legend pos = north west, xlabel=$x$, ylabel=$y$]
+			\addplot[domain=-3:3,samples=100]{\fetch{f}};
+			\addlegendentry{$f(x)$};
+		\end{axis}
+	\end{tikzpicture}
+\end{figure}
+
+\newpage
+
 \section{使用例: 関数の増減を調べる}
 
  {\bfseries\gtfamily keywords: 関数定義・微分・根の計算・代入・グラフ描画}
@@ -163,7 +179,7 @@ $f(x)=\print{f}$とする．$x$で微分すると
 となる．よってグラフは次のとおり．
 \begin{figure}[H]
 	\centering
-	\begin{tikzpicture}[scale=0.9]
+	\begin{tikzpicture}
 		\begin{axis}[legend pos = north west, xlabel=$x$, ylabel=$y$]
 			\addplot[domain=-4:7,samples=100]{\fetch{f}};
 			\addlegendentry{$f(x)$};
